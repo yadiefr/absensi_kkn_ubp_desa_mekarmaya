@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StudentController;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -49,4 +51,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/edit', [StudentController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
     });
+});
+
+Route::get('/storage/profiles/{filename}', function ($filename) {
+    $path = 'profiles/' . $filename;
+    
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    
+    $file = Storage::disk('public')->get($path);
+    $type = Storage::disk('public')->mimeType($path);
+    
+    return Response::make($file, 200)->header("Content-Type", $type);
 });
