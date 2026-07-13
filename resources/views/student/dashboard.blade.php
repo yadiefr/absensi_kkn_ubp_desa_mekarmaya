@@ -37,35 +37,51 @@
         </h3>
         <p style="font-weight: 700; font-size: 1.1rem;">({{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }})</p>
         
-        <div class="grid md:grid-cols-2 gap-6 mt-6" style="max-width: 650px; margin-left: auto; margin-right: auto;">
-            <div class="glass-panel" style="padding: 1.5rem; background: rgba(255,255,255,0.4);">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <span class="material-symbols-rounded" style="color: var(--primary-color);">login</span>
-                    <h4 style="margin: 0; font-size: 1.1rem;">Absen Pagi</h4>
+        <div class="grid grid-cols-2 gap-4 mt-6" style="max-width: 650px; margin-left: auto; margin-right: auto;">
+            <div class="glass-panel" style="padding: 1.25rem 0.75rem; background: rgba(255,255,255,0.4); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; margin-bottom: 0.5rem;">
+                        <span class="material-symbols-rounded" style="color: var(--primary-color); font-size: 1.5rem;">login</span>
+                        <h4 style="margin: 0; font-size: 1rem;">Absen Pagi</h4>
+                    </div>
+                    
+                    @if($todayAttendance && $todayAttendance->check_in_time)
+                        <p class="text-success" style="font-size: 1.5rem; font-weight: 800; margin: 0.5rem 0;">{{ $todayAttendance->check_in_time }}</p>
+                    @else
+                        <p style="font-size: 1.5rem; font-weight: 800; margin: 0.5rem 0; color: #cbd5e1;">--:--</p>
+                    @endif
                 </div>
                 
-                @if($todayAttendance && $todayAttendance->check_in_time)
-                    <p class="text-success" style="font-size: 1.75rem; font-weight: 800; margin: 0.5rem 0;">{{ $todayAttendance->check_in_time }}</p>
-                    <span class="badge badge-success"><span class="material-symbols-rounded" style="font-size: 1rem;">check_circle</span> Selesai</span>
-                @else
-                    <p style="font-size: 1.75rem; font-weight: 800; margin: 0.5rem 0; color: #cbd5e1;">--:--</p>
-                    <span class="badge badge-danger"><span class="material-symbols-rounded" style="font-size: 1rem;">cancel</span> Belum Absen</span>
-                @endif
+                <div>
+                    @if($todayAttendance && $todayAttendance->check_in_time)
+                        <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                    @else
+                        <span class="badge badge-danger" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">cancel</span> Belum Absen</span>
+                    @endif
+                </div>
             </div>
             
-            <div class="glass-panel" style="padding: 1.5rem; background: rgba(255,255,255,0.4);">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <span class="material-symbols-rounded" style="color: var(--secondary-color);">logout</span>
-                    <h4 style="margin: 0; font-size: 1.1rem;">Absen Malam</h4>
+            <div class="glass-panel" style="padding: 1.25rem 0.75rem; background: rgba(255,255,255,0.4); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; margin-bottom: 0.5rem;">
+                        <span class="material-symbols-rounded" style="color: var(--secondary-color); font-size: 1.5rem;">logout</span>
+                        <h4 style="margin: 0; font-size: 1rem;">Absen Malam</h4>
+                    </div>
+     
+                    @if($todayAttendance && $todayAttendance->check_out_time)
+                        <p class="text-success" style="font-size: 1.5rem; font-weight: 800; margin: 0.5rem 0;">{{ $todayAttendance->check_out_time }}</p>
+                    @else
+                        <p style="font-size: 1.5rem; font-weight: 800; margin: 0.5rem 0; color: #cbd5e1;">--:--</p>
+                    @endif
                 </div>
-
-                @if($todayAttendance && $todayAttendance->check_out_time)
-                    <p class="text-success" style="font-size: 1.75rem; font-weight: 800; margin: 0.5rem 0;">{{ $todayAttendance->check_out_time }}</p>
-                    <span class="badge badge-success"><span class="material-symbols-rounded" style="font-size: 1rem;">check_circle</span> Selesai</span>
-                @else
-                    <p style="font-size: 1.75rem; font-weight: 800; margin: 0.5rem 0; color: #cbd5e1;">--:--</p>
-                    <span class="badge badge-warning"><span class="material-symbols-rounded" style="font-size: 1rem;">pending</span> Belum Absen</span>
-                @endif
+                
+                <div>
+                    @if($todayAttendance && $todayAttendance->check_out_time)
+                        <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                    @else
+                        <span class="badge badge-warning" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: #b45309; background: #fef3c7; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">pending</span> Belum Absen</span>
+                    @endif
+                </div>
             </div>
         </div>
         
