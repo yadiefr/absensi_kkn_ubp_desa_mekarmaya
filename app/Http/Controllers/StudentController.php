@@ -14,12 +14,14 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $todayAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('date', Carbon::today())
+            ->whereDate('date', Carbon::today('Asia/Jakarta')->toDateString())
             ->first();
 
         $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+        $now = Carbon::now('Asia/Jakarta');
+        $currentTime = $now->format('H:i');
 
-        return view('student.dashboard', compact('user', 'todayAttendance', 'settings'));
+        return view('student.dashboard', compact('user', 'todayAttendance', 'settings', 'currentTime'));
     }
 
     public function attendForm()
@@ -90,17 +92,25 @@ class StudentController extends Controller
             
             return redirect()->route('student.dashboard')->with('success', 'Check-in berhasil!');
         } else {
-            if (!$attendance) {
-                return back()->with('error', 'Anda belum check-in hari ini.');
-            }
-            if ($attendance->check_out_time) {
+            if ($attendance && $attendance->check_out_time) {
                 return back()->with('error', 'Anda sudah check-out hari ini.');
             }
             
-            $attendance->update([
-                'check_out_time' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
-                'check_out_location' => $request->latitude . ',' . $request->longitude,
-            ]);
+            if (!$attendance) {
+                Attendance::create([
+                    'user_id' => $user->id,
+                    'date' => $today,
+                    'check_in_time' => null,
+                    'check_in_location' => null,
+                    'check_out_time' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
+                    'check_out_location' => $request->latitude . ',' . $request->longitude,
+                ]);
+            } else {
+                $attendance->update([
+                    'check_out_time' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
+                    'check_out_location' => $request->latitude . ',' . $request->longitude,
+                ]);
+            }
             
             return redirect()->route('student.dashboard')->with('success', 'Check-out berhasil!');
         }

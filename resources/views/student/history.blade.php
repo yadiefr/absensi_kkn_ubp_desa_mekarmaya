@@ -28,7 +28,7 @@
                     <tr>
                         <td class="text-center">{{ \Carbon\Carbon::parse($absen->date)->translatedFormat('d F Y') }}</td>
                         <td class="text-center">
-                            {{ $absen->check_in_time }}<br>
+                            {{ $absen->check_in_time ?? '-' }}<br>
                         </td>
                         <td class="text-center">
                             {{ $absen->check_out_time ?? '-' }}<br>

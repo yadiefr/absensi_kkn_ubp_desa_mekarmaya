@@ -86,18 +86,29 @@
         </div>
         
         <div class="mt-8">
-            @if(!$todayAttendance)
-                <a href="{{ route('student.attend.form') }}?type=check_in" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem; border-radius: 99px;">
-                    <span class="material-symbols-rounded">location_on</span> Mulai Absen Pagi
-                </a>
-            @elseif($todayAttendance && !$todayAttendance->check_out_time)
+            @php
+                $showCheckOut = false;
+                if ($todayAttendance) {
+                    if (!$todayAttendance->check_out_time) {
+                        $showCheckOut = true;
+                    }
+                } else {
+                    $showCheckOut = $currentTime > $settings['morning_end_time'];
+                }
+            @endphp
+
+            @if($todayAttendance && $todayAttendance->check_out_time)
+                <button class="btn" disabled style="background: #e2e8f0; color: #94a3b8; font-size: 1.1rem; padding: 1rem 2.5rem; border-radius: 99px; cursor: not-allowed;">
+                    <span class="material-symbols-rounded">task_alt</span> Kehadiran Selesai Hari Ini
+                </button>
+            @elseif($showCheckOut)
                 <a href="{{ route('student.attend.form') }}?type=check_out" class="btn btn-warning" style="font-size: 1.1rem; padding: 1rem 2.5rem; border-radius: 99px; background: linear-gradient(135deg, var(--warning), #d97706); color: white;">
                     <span class="material-symbols-rounded">location_on</span> Lakukan Absensi Malam
                 </a>
             @else
-                <button class="btn" disabled style="background: #e2e8f0; color: #94a3b8; font-size: 1.1rem; padding: 1rem 2.5rem; border-radius: 99px; cursor: not-allowed;">
-                    <span class="material-symbols-rounded">task_alt</span> Kehadiran Selesai Hari Ini
-                </button>
+                <a href="{{ route('student.attend.form') }}?type=check_in" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem; border-radius: 99px;">
+                    <span class="material-symbols-rounded">location_on</span> Mulai Absen Pagi
+                </a>
             @endif
         </div>
     </div>

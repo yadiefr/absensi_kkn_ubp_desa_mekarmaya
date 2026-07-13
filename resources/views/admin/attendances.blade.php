@@ -29,7 +29,7 @@
                     <tr>
                         <td class="text-center">{{ \Carbon\Carbon::parse($att->date)->format('d/m/Y') }}</td>
                         <td style="font-weight: 500;">{{ $att->user->name }}</td>
-                        <td class="text-center text-success" style="font-weight: 600;">{{ $att->check_in_time }}</td>
+                        <td class="text-center text-success" style="font-weight: 600;">{{ $att->check_in_time ?? '-' }}</td>
                         <td class="text-center text-secondary" style="font-weight: 600;">{{ $att->check_out_time ?? '-' }}</td>
                         </td>
                         <td>
