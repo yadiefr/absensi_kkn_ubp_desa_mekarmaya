@@ -32,8 +32,8 @@
                 @forelse($students as $mhs)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td class="text-center">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; justify-content: center; text-align: left;">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 @if($mhs->profile_photo_path)
                                     <img src="{{ Storage::url($mhs->profile_photo_path) }}" alt="Avatar" class="img-avatar" style="width: 40px; height: 40px; flex-shrink: 0;">
                                 @else
