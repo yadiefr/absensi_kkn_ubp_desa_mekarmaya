@@ -89,10 +89,37 @@ class AdminController extends Controller
         return redirect()->route('admin.students')->with('success', 'Data Mahasiswa berhasil dihapus.');
     }
 
-    public function attendances()
+    public function attendances(Request $request)
     {
-        $attendances = Attendance::with('user')->orderBy('date', 'desc')->orderBy('check_in_time', 'desc')->get();
-        return view('admin.attendances', compact('attendances'));
+        $selectedDate = $request->query('date');
+        
+        // If not specified, default to today
+        if ($request->has('date') && empty($selectedDate)) {
+            // Admin explicitly cleared the date filter
+            $selectedDate = null;
+        } elseif (!$request->has('date')) {
+            $selectedDate = Carbon::today('Asia/Jakarta')->toDateString();
+        }
+
+        $attendancesQuery = Attendance::with('user');
+        if ($selectedDate) {
+            $attendancesQuery->whereDate('date', $selectedDate);
+        }
+        $attendances = $attendancesQuery->orderBy('date', 'desc')->orderBy('check_in_time', 'desc')->get();
+
+        $notAttendedStudents = collect();
+        if ($selectedDate) {
+            $attendedUserIds = Attendance::whereDate('date', $selectedDate)
+                ->pluck('user_id')
+                ->toArray();
+
+            $notAttendedStudents = User::where('role', 'mahasiswa')
+                ->whereNotIn('id', $attendedUserIds)
+                ->orderBy('name', 'asc')
+                ->get();
+        }
+
+        return view('admin.attendances', compact('attendances', 'notAttendedStudents', 'selectedDate'));
     }
 
     public function destroyAttendance($id)
