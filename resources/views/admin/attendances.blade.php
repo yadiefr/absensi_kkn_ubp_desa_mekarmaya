@@ -102,8 +102,8 @@
                         <thead>
                             <tr>
                                 <th class="text-center">Nama</th>
-                                <th class="text-center">Pagi (Check-In)</th>
-                                <th class="text-center">Malam (Check-Out)</th>
+                                <th class="text-center">Pagi</th>
+                                <th class="text-center">Malam</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
