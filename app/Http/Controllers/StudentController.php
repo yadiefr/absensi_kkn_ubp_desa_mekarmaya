@@ -32,6 +32,14 @@ class StudentController extends Controller
             ->first();
 
         $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+        $now = Carbon::now('Asia/Jakarta');
+        $currentTime = $now->format('H:i');
+
+        if ($currentTime >= $settings['night_start_time']) {
+            if (request('type') !== 'check_out') {
+                return redirect()->route('student.attend.form', ['type' => 'check_out']);
+            }
+        }
 
         return view('student.attend', compact('todayAttendance', 'settings'));
     }
@@ -52,6 +60,9 @@ class StudentController extends Controller
         if ($request->type === 'check_in') {
             if ($currentTime < $settings['morning_start_time']) {
                 return back()->with('error', "Waktu Absen Pagi belum dimulai. Hanya diperbolehkan setelah pukul {$settings['morning_start_time']} WIB. (Waktu server sekarang: {$currentTime})");
+            }
+            if ($currentTime >= $settings['night_start_time']) {
+                return back()->with('error', "Waktu Absen Pagi sudah berakhir karena telah memasuki waktu Absen Malam. Silakan lakukan Absen Malam.");
             }
         } else {
             if ($currentTime < $settings['night_start_time']) {
@@ -80,7 +91,7 @@ class StudentController extends Controller
 
         if ($request->type === 'check_in') {
             if ($attendance) {
-                return back()->with('error', 'Anda sudah check-in hari ini.');
+                return back()->with('error', 'Anda sudah absen hari ini.');
             }
             
             $status = 'hadir';
@@ -96,11 +107,11 @@ class StudentController extends Controller
                 'status' => $status,
             ]);
             
-            $successMsg = $status === 'terlambat' ? 'Check-in berhasil! Anda terlambat.' : 'Check-in berhasil!';
+            $successMsg = $status === 'terlambat' ? 'Absen berhasil! Anda terlambat.' : 'Absen berhasil!';
             return redirect()->route('student.dashboard')->with('success', $successMsg);
         } else {
             if ($attendance && $attendance->check_out_time) {
-                return back()->with('error', 'Anda sudah check-out hari ini.');
+                return back()->with('error', 'Anda sudah absen hari ini.');
             }
             
             if (!$attendance) {
@@ -120,7 +131,7 @@ class StudentController extends Controller
                 ]);
             }
             
-            return redirect()->route('student.dashboard')->with('success', 'Check-out berhasil!');
+            return redirect()->route('student.dashboard')->with('success', 'Absen berhasil!');
         }
     }
 

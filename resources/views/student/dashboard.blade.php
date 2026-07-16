@@ -100,8 +100,14 @@
         <div class="mt-8">
             @php
                 $showCheckOut = false;
-                if ($todayAttendance && !$todayAttendance->check_out_time) {
-                    $showCheckOut = true;
+                if ($todayAttendance) {
+                    if (!$todayAttendance->check_out_time) {
+                        $showCheckOut = true;
+                    }
+                } else {
+                    if ($currentTime >= $settings['night_start_time']) {
+                        $showCheckOut = true;
+                    }
                 }
             @endphp
 
