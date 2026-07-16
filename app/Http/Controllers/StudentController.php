@@ -50,12 +50,12 @@ class StudentController extends Controller
 
         // 1. Validasi Waktu
         if ($request->type === 'check_in') {
-            if ($currentTime < $settings['morning_start_time'] || $currentTime > $settings['morning_end_time']) {
-                return back()->with('error', "Waktu Absen Pagi hanya diperbolehkan antara {$settings['morning_start_time']} - {$settings['morning_end_time']} WIB. (Waktu server sekarang: {$currentTime})");
+            if ($currentTime < $settings['morning_start_time']) {
+                return back()->with('error', "Waktu Absen Pagi belum dimulai. Hanya diperbolehkan setelah pukul {$settings['morning_start_time']} WIB. (Waktu server sekarang: {$currentTime})");
             }
         } else {
-            if ($currentTime < $settings['night_start_time'] || $currentTime > $settings['night_end_time']) {
-                return back()->with('error', "Waktu Absen Malam hanya diperbolehkan antara {$settings['night_start_time']} - {$settings['night_end_time']} WIB. (Waktu server sekarang: {$currentTime})");
+            if ($currentTime < $settings['night_start_time']) {
+                return back()->with('error', "Waktu Absen Malam belum dimulai. Hanya diperbolehkan setelah pukul {$settings['night_start_time']} WIB. (Waktu server sekarang: {$currentTime})");
             }
         }
 
@@ -83,14 +83,21 @@ class StudentController extends Controller
                 return back()->with('error', 'Anda sudah check-in hari ini.');
             }
             
+            $status = 'hadir';
+            if ($currentTime > $settings['morning_end_time']) {
+                $status = 'terlambat';
+            }
+
             Attendance::create([
                 'user_id' => $user->id,
                 'date' => $today,
                 'check_in_time' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'check_in_location' => $request->latitude . ',' . $request->longitude,
+                'status' => $status,
             ]);
             
-            return redirect()->route('student.dashboard')->with('success', 'Check-in berhasil!');
+            $successMsg = $status === 'terlambat' ? 'Check-in berhasil! Anda terlambat.' : 'Check-in berhasil!';
+            return redirect()->route('student.dashboard')->with('success', $successMsg);
         } else {
             if ($attendance && $attendance->check_out_time) {
                 return back()->with('error', 'Anda sudah check-out hari ini.');
@@ -104,6 +111,7 @@ class StudentController extends Controller
                     'check_in_location' => null,
                     'check_out_time' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'check_out_location' => $request->latitude . ',' . $request->longitude,
+                    'status' => 'terlambat',
                 ]);
             } else {
                 $attendance->update([
@@ -133,7 +141,8 @@ class StudentController extends Controller
     public function history()
     {
         $attendances = Attendance::where('user_id', Auth::id())->orderBy('date', 'desc')->get();
-        return view('student.history', compact('attendances'));
+        $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+        return view('student.history', compact('attendances', 'settings'));
     }
 
     public function profile()

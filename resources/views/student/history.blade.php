@@ -28,15 +28,35 @@
                     <tr>
                         <td class="text-center">{{ \Carbon\Carbon::parse($absen->date)->translatedFormat('d F Y') }}</td>
                         <td class="text-center">
-                            {{ $absen->check_in_time ?? '-' }}<br>
+                            {{ $absen->check_in_time ?? '-' }}
+                            @if($absen->check_in_time && $absen->status === 'terlambat')
+                                <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                            @endif
                         </td>
                         <td class="text-center">
-                            {{ $absen->check_out_time ?? '-' }}<br>
+                            {{ $absen->check_out_time ?? '-' }}
+                            @if($absen->check_out_time && \Carbon\Carbon::parse($absen->check_out_time)->format('H:i') > $settings['night_end_time'])
+                                <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                            @endif
                         </td>
                         <td class="text-center">
-                            <span style="background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
-                                {{ ucfirst($absen->status) }}
-                            </span>
+                            @if($absen->status === 'hadir')
+                                <span style="background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                    Hadir
+                                </span>
+                            @elseif($absen->status === 'terlambat')
+                                <span style="background: rgba(245, 158, 11, 0.15); color: var(--warning); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                    Terlambat
+                                </span>
+                            @elseif($absen->status === 'sakit' || $absen->status === 'izin')
+                                <span style="background: rgba(99, 102, 241, 0.15); color: var(--primary-color); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                    {{ ucfirst($absen->status) }}
+                                </span>
+                            @else
+                                <span style="background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                    {{ ucfirst($absen->status) }}
+                                </span>
+                            @endif
                         </td>
                     </tr>
                 @empty

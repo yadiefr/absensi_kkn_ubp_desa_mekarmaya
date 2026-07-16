@@ -119,7 +119,8 @@ class AdminController extends Controller
                 ->get();
         }
 
-        return view('admin.attendances', compact('attendances', 'notAttendedStudents', 'selectedDate'));
+        $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+        return view('admin.attendances', compact('attendances', 'notAttendedStudents', 'selectedDate', 'settings'));
     }
 
     public function destroyAttendance($id)

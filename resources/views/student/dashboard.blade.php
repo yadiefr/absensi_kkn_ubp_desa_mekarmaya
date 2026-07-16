@@ -54,7 +54,11 @@
                 
                 <div>
                     @if($todayAttendance && $todayAttendance->check_in_time)
-                        <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                        @if($todayAttendance->status === 'terlambat')
+                            <span class="badge" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: #b45309; background: #fef3c7; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">warning</span> Terlambat</span>
+                        @else
+                            <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                        @endif
                     @else
                         <span class="badge badge-danger" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">cancel</span> Belum Absen</span>
                     @endif
@@ -77,7 +81,15 @@
                 
                 <div>
                     @if($todayAttendance && $todayAttendance->check_out_time)
-                        <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                        @php
+                            $checkoutTime = \Carbon\Carbon::parse($todayAttendance->check_out_time)->format('H:i');
+                            $isCheckoutLate = $checkoutTime > $settings['night_end_time'];
+                        @endphp
+                        @if($isCheckoutLate)
+                            <span class="badge" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: #b45309; background: #fef3c7; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">warning</span> Terlambat</span>
+                        @else
+                            <span class="badge badge-success" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">check_circle</span> Selesai</span>
+                        @endif
                     @else
                         <span class="badge badge-warning" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: #b45309; background: #fef3c7; display: inline-flex; align-items: center; gap: 0.25rem; justify-content: center; width: fit-content; margin: 0 auto;"><span class="material-symbols-rounded" style="font-size: 0.85rem;">pending</span> Belum Absen</span>
                     @endif
@@ -88,12 +100,8 @@
         <div class="mt-8">
             @php
                 $showCheckOut = false;
-                if ($todayAttendance) {
-                    if (!$todayAttendance->check_out_time) {
-                        $showCheckOut = true;
-                    }
-                } else {
-                    $showCheckOut = $currentTime > $settings['morning_end_time'];
+                if ($todayAttendance && !$todayAttendance->check_out_time) {
+                    $showCheckOut = true;
                 }
             @endphp
 

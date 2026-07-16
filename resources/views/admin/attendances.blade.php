@@ -104,6 +104,7 @@
                                 <th class="text-center">Nama</th>
                                 <th class="text-center">Pagi</th>
                                 <th class="text-center">Malam</th>
+                                <th class="text-center">Status</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -111,8 +112,37 @@
                             @forelse($attendances as $att)
                                 <tr>
                                     <td style="font-weight: 500;">{{ $att->user->name }}</td>
-                                    <td class="text-center text-success" style="font-weight: 600;">{{ $att->check_in_time ?? '-' }}</td>
-                                    <td class="text-center text-secondary" style="font-weight: 600;">{{ $att->check_out_time ?? '-' }}</td>
+                                    <td class="text-center text-success" style="font-weight: 600;">
+                                        {{ $att->check_in_time ?? '-' }}
+                                        @if($att->check_in_time && $att->status === 'terlambat')
+                                            <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center text-secondary" style="font-weight: 600;">
+                                        {{ $att->check_out_time ?? '-' }}
+                                        @if($att->check_out_time && \Carbon\Carbon::parse($att->check_out_time)->format('H:i') > $settings['night_end_time'])
+                                            <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($att->status === 'hadir')
+                                            <span style="background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                                Hadir
+                                            </span>
+                                        @elseif($att->status === 'terlambat')
+                                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--warning); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                                Terlambat
+                                            </span>
+                                        @elseif($att->status === 'sakit' || $att->status === 'izin')
+                                            <span style="background: rgba(99, 102, 241, 0.15); color: var(--primary-color); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                                {{ ucfirst($att->status) }}
+                                            </span>
+                                        @else
+                                            <span style="background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                                {{ ucfirst($att->status) }}
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <div style="display: flex; justify-content: center;">
                                             <form action="{{ route('admin.attendances.destroy', $att->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data absensi ini?');">
@@ -127,7 +157,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">Belum ada data kehadiran pada tanggal ini.</td>
+                                    <td colspan="5" class="text-center">Belum ada data kehadiran pada tanggal ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -150,6 +180,7 @@
                         <th class="text-center">Nama</th>
                         <th class="text-center">Pagi (Check-In)</th>
                         <th class="text-center">Malam (Check-Out)</th>
+                        <th class="text-center">Status</th>
                         <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -158,8 +189,37 @@
                         <tr>
                             <td class="text-center">{{ \Carbon\Carbon::parse($att->date)->format('d/m/Y') }}</td>
                             <td style="font-weight: 500;">{{ $att->user->name }}</td>
-                            <td class="text-center text-success" style="font-weight: 600;">{{ $att->check_in_time ?? '-' }}</td>
-                            <td class="text-center text-secondary" style="font-weight: 600;">{{ $att->check_out_time ?? '-' }}</td>
+                            <td class="text-center text-success" style="font-weight: 600;">
+                                {{ $att->check_in_time ?? '-' }}
+                                @if($att->check_in_time && $att->status === 'terlambat')
+                                    <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                                @endif
+                            </td>
+                            <td class="text-center text-secondary" style="font-weight: 600;">
+                                {{ $att->check_out_time ?? '-' }}
+                                @if($att->check_out_time && \Carbon\Carbon::parse($att->check_out_time)->format('H:i') > $settings['night_end_time'])
+                                    <br><small style="color: var(--warning); font-weight: 700;">(Terlambat)</small>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                @if($att->status === 'hadir')
+                                    <span style="background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                        Hadir
+                                    </span>
+                                @elseif($att->status === 'terlambat')
+                                    <span style="background: rgba(245, 158, 11, 0.15); color: var(--warning); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                        Terlambat
+                                    </span>
+                                @elseif($att->status === 'sakit' || $att->status === 'izin')
+                                    <span style="background: rgba(99, 102, 241, 0.15); color: var(--primary-color); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                        {{ ucfirst($att->status) }}
+                                    </span>
+                                @else
+                                    <span style="background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; display: inline-block;">
+                                        {{ ucfirst($att->status) }}
+                                    </span>
+                                @endif
+                            </td>
                             <td>
                                 <div style="display: flex; justify-content: center;">
                                     <form action="{{ route('admin.attendances.destroy', $att->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data absensi ini?');">
@@ -174,7 +234,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center">Belum ada data kehadiran.</td>
+                            <td colspan="6" class="text-center">Belum ada data kehadiran.</td>
                         </tr>
                     @endforelse
                 </tbody>
