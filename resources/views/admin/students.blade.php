@@ -12,9 +12,6 @@
             <a href="{{ route('admin.students.create') }}" class="btn btn-primary" style="border-radius: 99px; padding: 0.5rem 1.5rem;">
                 <span class="material-symbols-rounded">person_add</span> Tambah Mahasiswa
             </a>
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline" style="border-radius: 99px; padding: 0.5rem 1.5rem;">
-                <span class="material-symbols-rounded">arrow_back</span> Kembali
-            </a>
         </div>
     </div>
 

@@ -15,6 +15,42 @@
 .col-right {
     width: 100%;
 }
+.filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+}
+.filter-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+.filter-input-group label {
+    white-space: nowrap;
+}
+.filter-input-group .form-control {
+    flex-grow: 1;
+    min-width: 0;
+    width: 100%;
+    max-width: 100% !important;
+}
+.filter-button-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+.filter-button-group a,
+.filter-button-group button {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+}
+
 @media (min-width: 768px) {
     .grid-container {
         display: grid;
@@ -27,36 +63,57 @@
     .col-right {
         grid-column: span 2 / span 2;
     }
+    .filter-form {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .filter-input-group {
+        width: auto;
+    }
+    .filter-input-group .form-control {
+        width: 250px;
+        max-width: 250px !important;
+        flex-grow: 0;
+    }
+    .filter-button-group {
+        width: auto;
+        flex-wrap: nowrap;
+    }
+    .filter-button-group a,
+    .filter-button-group button {
+        flex: none;
+    }
 }
 </style>
 
 <div class="glass-panel">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mb-6" style="flex-wrap: wrap; gap: 1rem;">
         <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
             <span class="material-symbols-rounded text-success" style="font-size: 2rem;">fact_check</span> Rekap Kehadiran
         </h2>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline" style="border-radius: 99px; padding: 0.5rem 1.5rem;">
-            <span class="material-symbols-rounded">arrow_back</span> Kembali
-        </a>
     </div>
 
     <!-- Filter Form -->
-    <div style="background: rgba(255, 255, 255, 0.4); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.4); margin-bottom: 2rem;">
-        <form method="GET" action="{{ route('admin.attendances') }}" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 0;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; flex-grow: 1;">
+    <div style="background: rgba(255, 255, 255, 0.4); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.4); margin-bottom: 2rem;">
+        <form method="GET" action="{{ route('admin.attendances') }}" class="filter-form">
+            <div class="filter-input-group">
                 <span class="material-symbols-rounded text-primary" style="font-size: 1.5rem;">calendar_today</span>
                 <label for="date-filter" style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); white-space: nowrap; margin: 0;">Pilih Tanggal:</label>
-                <input type="date" name="date" id="date-filter" class="form-control" style="max-width: 250px; padding: 0.5rem 1rem; margin: 0;" value="{{ $selectedDate ?? '' }}" onchange="this.form.submit()">
+                <input type="date" name="date" id="date-filter" class="form-control" style="padding: 0.5rem 1rem; margin: 0;" value="{{ $selectedDate ?? '' }}" onchange="this.form.submit()">
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div class="filter-button-group">
                 @if($selectedDate)
                     <a href="{{ route('admin.attendances') }}" class="btn btn-outline" style="padding: 0.5rem 1.2rem; border-radius: 99px; font-size: 0.9rem; background: rgba(255,255,255,0.5);">
-                        <span class="material-symbols-rounded">close</span> Semua Tanggal
+                        <span class="material-symbols-rounded">close</span> Reset Filter
                     </a>
                 @endif
                 <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.2rem; border-radius: 99px; font-size: 0.9rem;">
                     <span class="material-symbols-rounded">filter_alt</span> Filter
                 </button>
+                <a href="{{ route('admin.attendances.export') }}" class="btn btn-success" style="padding: 0.5rem 1.2rem; border-radius: 99px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <span class="material-symbols-rounded" style="font-size: 1.2rem;">download</span> Export Excel
+                </a>
             </div>
         </form>
     </div>
@@ -64,7 +121,7 @@
     @if($selectedDate)
         <div class="grid-container">
             <!-- Left Side: Belum Absen -->
-            <div class="col-left" style="background: rgba(255, 255, 255, 0.25); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.3); height: fit-content;">
+            <div class="col-left" style="background: rgba(255, 255, 255, 0.25); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.3); height: fit-content;">
                 <h3 style="margin-top: 0; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem; font-family: 'Poppins', sans-serif;">
                     <span class="material-symbols-rounded text-danger">person_off</span> Belum Absen
                     <span class="badge badge-danger" style="margin-left: auto;">{{ $notAttendedStudents->count() }} orang</span>

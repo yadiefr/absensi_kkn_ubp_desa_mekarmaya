@@ -131,6 +131,194 @@ class AdminController extends Controller
         return redirect()->route('admin.attendances')->with('success', 'Data absensi berhasil dihapus.');
     }
 
+    public function exportExcel(Request $request)
+    {
+        $selectedDate = $request->query('date');
+        $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+
+        // 1. Ambil data absen total per mahasiswa (untuk sheet "Absen Total")
+        $students = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
+
+        // Hitung total hari aktif absensi KKN secara keseluruhan (atau disaring sesuai bulan dari tanggal terpilih jika difilter)
+        $totalActiveDaysQuery = Attendance::distinct();
+        if ($selectedDate) {
+            $dateObj = Carbon::parse($selectedDate);
+            $totalActiveDaysQuery->whereYear('date', $dateObj->year)->whereMonth('date', $dateObj->month);
+        }
+        $totalActiveDays = $totalActiveDaysQuery->pluck('date')->count();
+
+        $totalSheetData = [
+            [
+                'No',
+                'NIM',
+                'Nama Mahasiswa',
+                'Program Studi',
+                'Total Hari Aktif KKN',
+                'Total Hadir Pagi',
+                'Total Hadir Malam',
+                'Total Terlambat',
+                'Persentase Kehadiran'
+            ]
+        ];
+
+        $noTotal = 1;
+        foreach ($students as $student) {
+            $studentQuery = Attendance::where('user_id', $student->id);
+            if ($selectedDate) {
+                $dateObj = Carbon::parse($selectedDate);
+                $studentQuery->whereYear('date', $dateObj->year)->whereMonth('date', $dateObj->month);
+            }
+            $studentAttendances = $studentQuery->get();
+
+            $hadirPagi = 0;
+            $hadirMalam = 0;
+            $terlambat = 0;
+
+            foreach ($studentAttendances as $att) {
+                // Check-in (Pagi)
+                if ($att->check_in_time) {
+                    $isLate = Carbon::parse($att->check_in_time)->format('H:i') > $settings['morning_end_time'];
+                    if ($isLate) {
+                        $terlambat++;
+                    } else {
+                        $hadirPagi++;
+                    }
+                }
+                
+                // Check-out (Malam)
+                if ($att->check_out_time) {
+                    $isLate = Carbon::parse($att->check_out_time)->format('H:i') > $settings['night_end_time'];
+                    if ($isLate) {
+                        $terlambat++;
+                    } else {
+                        $hadirMalam++;
+                    }
+                }
+            }
+
+            // Persentase Kehadiran = ((Hadir Pagi + Hadir Malam + Terlambat) / (Total Hari Aktif KKN * 2)) * 100
+            $percentage = $totalActiveDays > 0
+                ? round((($hadirPagi + $hadirMalam + $terlambat) / ($totalActiveDays * 2)) * 100, 1) . '%'
+                : '0%';
+
+            $totalSheetData[] = [
+                $noTotal++,
+                $student->nim ?? '-',
+                $student->name ?? '-',
+                $student->prodi ?? '-',
+                $totalActiveDays,
+                $hadirPagi,
+                $hadirMalam,
+                $terlambat,
+                $percentage
+            ];
+        }
+
+        // 2. Ambil data absen harian dan kelompokkan per hari
+        $attendancesQuery = Attendance::with('user');
+        if ($selectedDate) {
+            $attendancesQuery->whereDate('date', $selectedDate);
+        }
+        
+        // Urutkan tanggal naik (ascending) agar urutan sheet teratur dari awal ke akhir
+        $attendances = $attendancesQuery->orderBy('date', 'asc')
+            ->orderBy('check_in_time', 'asc')
+            ->get();
+
+        // Kelompokkan data absensi berdasarkan tanggal
+        $groupedAttendances = $attendances->groupBy('date');
+
+        // Buat instance SimpleXLSXGen baru
+        $xlsx = new \Shuchkin\SimpleXLSXGen();
+
+        // Tambahkan sheet untuk setiap hari
+        if ($groupedAttendances->isEmpty()) {
+            $xlsx->addSheet([
+                ['Tidak ada data absensi untuk periode ini.']
+            ], 'Absen Harian');
+        } else {
+            foreach ($groupedAttendances as $dateStr => $dayRecords) {
+                // Format tanggal untuk nama sheet (misal: "01 Jun 2026")
+                $sheetName = Carbon::parse($dateStr)->translatedFormat('d M Y');
+                
+                $dailySheetData = [
+                    [
+                        'No',
+                        'Tanggal',
+                        'NIM',
+                        'Nama Mahasiswa',
+                        'Program Studi',
+                        'Absen Pagi',
+                        'Absen Malam'
+                    ]
+                ];
+
+                $noDaily = 1;
+                foreach ($dayRecords as $att) {
+                    if ($att->status === 'sakit' || $att->status === 'izin') {
+                        $label = ucfirst($att->status);
+                        // Tampilkan label Sakit/Izin dengan warna ungu, tidak merah karena absensinya sah
+                        $checkInDisplay = '<style color="#4f46e5">' . $label . '</style>';
+                        $checkOutDisplay = '<style color="#4f46e5">' . $label . '</style>';
+                    } else {
+                        // Absen Pagi (Check-in)
+                        $checkInDisplay = '-';
+                        if ($att->check_in_time) {
+                            $isCheckInLate = Carbon::parse($att->check_in_time)->format('H:i') > $settings['morning_end_time'];
+                            if ($isCheckInLate) {
+                                $checkInDisplay = '<style color="#FF0000">' . $att->check_in_time . '</style>';
+                            } else {
+                                $checkInDisplay = $att->check_in_time;
+                            }
+                        } else {
+                            // Tidak absen pagi (Alpha/Terlambat malam saja)
+                            $checkInDisplay = '<style color="#FF0000">-</style>';
+                        }
+
+                        // Absen Malam (Check-out)
+                        $checkOutDisplay = '-';
+                        if ($att->check_out_time) {
+                            $isCheckOutLate = Carbon::parse($att->check_out_time)->format('H:i') > $settings['night_end_time'];
+                            if ($isCheckOutLate) {
+                                $checkOutDisplay = '<style color="#FF0000">' . $att->check_out_time . '</style>';
+                            } else {
+                                $checkOutDisplay = $att->check_out_time;
+                            }
+                        } else {
+                            // Tidak absen malam
+                            $checkOutDisplay = '<style color="#FF0000">-</style>';
+                        }
+                    }
+
+                    $dailySheetData[] = [
+                        $noDaily++,
+                        Carbon::parse($att->date)->translatedFormat('d F Y'),
+                        $att->user->nim ?? '-',
+                        $att->user->name ?? '-',
+                        $att->user->prodi ?? '-',
+                        $checkInDisplay,
+                        $checkOutDisplay
+                    ];
+                }
+
+                $xlsx->addSheet($dailySheetData, $sheetName);
+            }
+        }
+
+        // Tambahkan sheet Absen Total di paling akhir
+        $xlsx->addSheet($totalSheetData, 'Absen Total');
+
+        $filename = 'rekap_absensi_' . ($selectedDate ?: 'semua') . '_' . date('Ymd_His') . '.xlsx';
+
+        return response((string)$xlsx, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ]);
+    }
+
     public function settings()
     {
         $settingsData = \App\Models\Setting::all()->pluck('value', 'key')->toArray();

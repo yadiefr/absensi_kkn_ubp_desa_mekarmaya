@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/students/{id}', [AdminController::class, 'destroyStudent'])->name('students.destroy');
 
         Route::get('/attendances', [AdminController::class, 'attendances'])->name('attendances');
+        Route::get('/attendances/export', [AdminController::class, 'exportExcel'])->name('attendances.export');
         Route::delete('/attendances/{id}', [AdminController::class, 'destroyAttendance'])->name('attendances.destroy');
 
         // Settings
