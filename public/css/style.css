@@ -203,6 +203,8 @@ h6,
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .nav-links {
