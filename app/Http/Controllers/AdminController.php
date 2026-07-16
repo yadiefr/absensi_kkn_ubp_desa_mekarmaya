@@ -133,6 +133,7 @@ class AdminController extends Controller
 
     public function exportExcel(Request $request)
     {
+        require_once __DIR__ . '/SimpleXLSXGen.php';
         $selectedDate = $request->query('date');
         $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
 
