@@ -47,13 +47,16 @@
                         <td class="text-center">{{ $mhs->prodi }}</td>
                         <td class="text-center">
                             <div style="display: flex; justify-content: center; gap: 0.5rem;">
-                                <a href="{{ route('admin.students.edit', $mhs->id) }}" class="btn" style="background: rgba(245, 158, 11, 0.15); color: var(--warning); padding: 0.4rem 0.8rem;">
+                                <a href="{{ route('admin.attendances') }}" class="btn" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-color); padding: 0.4rem 0.8rem;" title="Absenkan Mahasiswa">
+                                    <span class="material-symbols-rounded" style="font-size: 1.2rem;">how_to_reg</span>
+                                </a>
+                                <a href="{{ route('admin.students.edit', $mhs->id) }}" class="btn" style="background: rgba(245, 158, 11, 0.15); color: var(--warning); padding: 0.4rem 0.8rem;" title="Edit Data Mahasiswa">
                                     <span class="material-symbols-rounded" style="font-size: 1.2rem;">edit</span>
                                 </a>
                                 <form action="{{ route('admin.students.destroy', $mhs->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus mahasiswa ini?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn" style="background: rgba(244, 63, 94, 0.15); color: var(--danger); padding: 0.4rem 0.8rem;">
+                                    <button type="submit" class="btn" style="background: rgba(244, 63, 94, 0.15); color: var(--danger); padding: 0.4rem 0.8rem;" title="Hapus Mahasiswa">
                                         <span class="material-symbols-rounded" style="font-size: 1.2rem;">delete</span>
                                     </button>
                                 </form>

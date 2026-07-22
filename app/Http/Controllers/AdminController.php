@@ -119,8 +119,77 @@ class AdminController extends Controller
                 ->get();
         }
 
+        $allStudents = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
+
         $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
-        return view('admin.attendances', compact('attendances', 'notAttendedStudents', 'selectedDate', 'settings'));
+        return view('admin.attendances', compact('attendances', 'notAttendedStudents', 'allStudents', 'selectedDate', 'settings'));
+    }
+
+    public function storeAttendance(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+            'status' => 'required|in:hadir,terlambat,sakit,izin',
+            'session' => 'required|in:check_in,check_out,both',
+            'check_in_time' => 'nullable',
+            'check_out_time' => 'nullable',
+            'notes' => 'nullable|string',
+        ]);
+
+        $settings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+        $nowTime = Carbon::now('Asia/Jakarta')->format('H:i:s');
+
+        $attendance = Attendance::where('user_id', $request->user_id)
+            ->whereDate('date', $request->date)
+            ->first();
+
+        $status = $request->status;
+        $checkInTime = null;
+        $checkOutTime = null;
+
+        if ($request->session === 'check_in') {
+            $checkInTime = $request->filled('check_in_time') ? $request->check_in_time : ($attendance && $attendance->check_in_time ? $attendance->check_in_time : $nowTime);
+            $checkOutTime = $attendance ? $attendance->check_out_time : null;
+        } elseif ($request->session === 'check_out') {
+            $checkInTime = $attendance ? $attendance->check_in_time : null;
+            $checkOutTime = $request->filled('check_out_time') ? $request->check_out_time : ($attendance && $attendance->check_out_time ? $attendance->check_out_time : $nowTime);
+        } else { // both
+            $checkInTime = $request->filled('check_in_time') ? $request->check_in_time : ($attendance && $attendance->check_in_time ? $attendance->check_in_time : '07:30:00');
+            $checkOutTime = $request->filled('check_out_time') ? $request->check_out_time : ($attendance && $attendance->check_out_time ? $attendance->check_out_time : '20:00:00');
+        }
+
+        if ($status === 'sakit' || $status === 'izin') {
+            // Untuk sakit/izin tidak wajib jam
+        } elseif ($status === 'hadir') {
+            $morningEnd = $settings['morning_end_time'] ?? '08:00';
+            if ($checkInTime && Carbon::parse($checkInTime)->format('H:i') > $morningEnd) {
+                $status = 'terlambat';
+            }
+        }
+
+        if ($attendance) {
+            $attendance->update([
+                'status' => $status,
+                'check_in_time' => $checkInTime,
+                'check_out_time' => $checkOutTime,
+                'notes' => $request->notes ?? $attendance->notes,
+            ]);
+        } else {
+            Attendance::create([
+                'user_id' => $request->user_id,
+                'date' => $request->date,
+                'check_in_time' => $checkInTime,
+                'check_out_time' => $checkOutTime,
+                'check_in_location' => 'Input Manual Admin',
+                'check_out_location' => 'Input Manual Admin',
+                'status' => $status,
+                'notes' => $request->notes ?? 'Diabsenkan oleh Admin',
+            ]);
+        }
+
+        return redirect()->route('admin.attendances', ['date' => $request->date])
+            ->with('success', 'Data absensi mahasiswa berhasil disimpan.');
     }
 
     public function destroyAttendance($id)
